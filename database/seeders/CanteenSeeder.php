@@ -35,7 +35,7 @@ class CanteenSeeder extends Seeder
                 [
                     'name' => $row['name'],
                     'email' => $row['username'].'@ekantin.test',
-                    'password' => 'password',
+                    'password' => env('SEED_SELLER_PASSWORD'),
                     'role' => User::ROLE_SELLER,
                 ]
             );

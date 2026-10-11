@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Administrator Sekolah',
                 'email' => 'admin@ekantin.test',
-                'password' => 'password',
+                'password' => env('SEED_ADMIN_PASSWORD'),
                 'role' => User::ROLE_ADMIN,
             ]
         );

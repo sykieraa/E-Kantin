@@ -39,13 +39,36 @@
 
 <div>
     <label for="image" class="label">Foto menu</label>
-    @isset($product)
-        @if ($product->image)
-            <img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}" class="mb-2 h-24 w-24 rounded-xl object-cover">
-        @endif
-    @endisset
-    <input id="image" name="image" type="file" accept="image/*" class="input">
-    <p class="mt-1 text-xs text-gray-500">Format jpg, jpeg, png, atau webp. Maksimal 2 MB. Kosongkan bila tidak ingin mengganti foto.</p>
+
+```
+@isset($product)
+    @if ($product->image)
+        <img
+            src="{{ $product->image }}"
+            alt="{{ $product->name }}"
+            class="mb-2 h-24 w-24 rounded-xl object-cover"
+        >
+    @endif
+@endisset
+
+<input
+    id="image"
+    name="image"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="input"
+>
+
+<p class="mt-1 text-xs text-gray-500">
+    Format jpg, jpeg, png, atau webp. Maksimal 2 MB.
+    Kosongkan bila tidak ingin mengganti foto.
+</p>
+
+@error('image')
+    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+@enderror
+```
+
 </div>
 
 <label class="flex items-center gap-2 text-sm text-gray-700">

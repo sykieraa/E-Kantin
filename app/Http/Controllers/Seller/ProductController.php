@@ -8,8 +8,8 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Cloudinary\Cloudinary;
 
 class ProductController extends Controller
 {
@@ -47,12 +47,59 @@ class ProductController extends Controller
         $data['is_available'] = $request->boolean('is_available');
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $cloudinary = new Cloudinary();
+            $result = $cloudinary->uploadApi()->upload(
+                $request->file('image')->getRealPath(),
+                ['folder' => 'e-kantin/products']
+            );
+
+            $data['image'] = $result['secure_url'];
+            $data['image_public_id'] = $result['public_id'];
         }
 
         Product::create($data);
 
-        return redirect()->route('seller.products.index')->with('success', 'Menu berhasil ditambahkan.');
+        return redirect()
+            ->route('seller.products.index')
+            ->with('success', 'Menu berhasil ditambahkan.');
+
+    }
+
+    public function update(ProductRequest $request, Product $product): RedirectResponse
+    {
+        $this->authorizeProduct($request, $product);
+
+        $data = $request->validated();
+        $data['is_available'] = $request->boolean('is_available');
+
+        $oldPublicId = $product->image_public_id;
+
+        if ($request->hasFile('image')) {
+            $cloudinary = new Cloudinary();
+
+            $result = $cloudinary->uploadApi()->upload(
+                $request->file('image')->getRealPath(),
+                ['folder' => 'e-kantin/products']
+            );
+
+            $data['image'] = $result['secure_url'];
+            $data['image_public_id'] = $result['public_id'];
+        }
+
+        $product->update($data);
+
+        if ($request->hasFile('image') && $oldPublicId) {
+            try {
+                (new Cloudinary())->uploadApi()->destroy($oldPublicId);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return redirect()
+            ->route('seller.products.index')
+            ->with('success', 'Menu berhasil diperbarui.');
+
     }
 
     public function edit(Request $request, Product $product): View
@@ -65,24 +112,6 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(ProductRequest $request, Product $product): RedirectResponse
-    {
-        $this->authorizeProduct($request, $product);
-
-        $data = $request->validated();
-        $data['is_available'] = $request->boolean('is_available');
-
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $data['image'] = $request->file('image')->store('products', 'public');
-        }
-
-        $product->update($data);
-
-        return redirect()->route('seller.products.index')->with('success', 'Menu berhasil diperbarui.');
-    }
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
